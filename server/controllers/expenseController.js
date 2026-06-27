@@ -1,0 +1,84 @@
+const Expense = require("../models/Expense");
+
+//POST
+const createExpense = async (req, res) => {
+  try {
+    const { title, amount, category, date } = req.body;
+
+    if (!title || !amount || !category || !date) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const expense = await Expense.create({
+      title,
+      amount,
+      category,
+      date
+    });
+
+    res.status(201).json(expense);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//GET
+const getExpenses = async(req,res) => {
+  try{
+    const expenses = await Expense.find().sort({date: -1});
+    res.status(200).json(expenses);
+  } catch(error){
+    res.status(500).json({message: error.message});
+  }
+}
+
+//GET - by ID
+const getExpenseById = async(req,res) => {
+  try{
+    const expense = await Expense.findById(req.params.id);
+  if(!expense){
+    return res.status(404).json({message: "Expense not found"});
+  }
+  res.status(200).json(expense);
+  } catch(error){
+    res.status(500).json({message: "Invalid Expense ID"}, error.message);
+  }
+}
+
+//PUT - by ID
+const updateExpense = async(req,res) => {
+  try{
+    const {title, amount, category, date} = req.body;
+
+    const expense = await Expense.findById(req.params.id);
+    if(!expense){
+      return res.status(404).json({message: "Expense not found"});
+    }
+
+    expense.title = title || expense.title;
+    expense.amount = amount || expense.amount;
+    expense.category = category || expense.category;
+    expense.date = date || expense.date;
+
+    const updatedExpense = await expense.save();
+    res.status(200).json(updatedExpense);
+
+  } catch(error){
+    res.status(500).json({message: "Invalid Expense ID"});
+  }
+}
+
+const deleteExpense = async(req,res) => {
+  try{
+    const expense = await Expense.findById(req.params.id);
+    if(!expense){
+      return res.status(404).json({message: "Expense not found"});
+    }
+    await expense.deleteOne();
+    res.status(200).json({message: "Expense deleted successfully!"});
+  } catch(error){
+    res.status(500).json({message: "Invalid Epense ID"});
+  }
+}
+
+module.exports = { createExpense, getExpenses, getExpenseById, updateExpense, deleteExpense };
